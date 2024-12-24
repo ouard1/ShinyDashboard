@@ -1,0 +1,1 @@
+0 * * * * /bin/bash /home/ouarda/dashboard/ShinyDashboard/scripts/collect_data_weather.sh >> /home/ouarda/dashboard/ShinyDashboard/logs/collect_data.log 2>&1

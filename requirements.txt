@@ -1,0 +1,11 @@
+cryptography==41.0.7
+Jinja2==3.1.2
+jsonpatch==1.32
+jsonpointer==2.0
+markdown-it-py==3.0.0
+MarkupSafe==2.1.5
+pillow==10.2.0
+PyJWT==2.7.0
+pyparsing==3.1.1
+pyrsistent==0.20.0
+pyserial==3.5

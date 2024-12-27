@@ -38,7 +38,7 @@ for file in files:
             if "hourly" in data:
                 hourly_data = data["hourly"]
                 for i, time in enumerate(hourly_data["time"]):
-                    # Vérification des données disponibles
+                    
                     if "temperature_2m" in hourly_data and "wind_speed_10m" in hourly_data:
                         all_data.append({
                             "timestamp": time,
@@ -59,7 +59,7 @@ if not df.empty:
     df["day"] = pd.to_datetime(df["timestamp"].dt.date)
     df["region"] = df.apply(lambda row: get_region(row["latitude"], row["longitude"]), axis=1)
 
-    # Résumé journalier
+    
     daily_summary = df.groupby(["region", "day"]).agg({
         "temperature": "mean",
         "wind_speed": "max"
@@ -67,7 +67,7 @@ if not df.empty:
 
     daily_summary["summary_date"] = datetime.now().isoformat()
 
-    # Insertion dans MongoDB
+  
     client = MongoClient(MONGO_URI)
     db = client[DB_NAME]
     collection = db[COLLECTION_NAME]

@@ -1,0 +1,27 @@
+weather data extraction cron command :
+
+0 * * * *  /home/ouarda/dashboard/ShinyDashboard/scripts/collect_data_weather.sh >> /home/ouarda/dashboard/ShinyDashboard/logs/collect_weather_data.log 2>&1
+
+weather data summary cron command :
+
+0 0 * * * /usr/bin/python3  /home/ouarda/dashboard/ShinyDashboard/scripts/summarize_weather_data.py >> /home/ouarda/dashboard/ShinyDashboard/logs/summarize_weather_data.log 2>&1
+
+Crude oil extraction cron command:
+
+0 0 * * * /home/user/Bureau/projet_linux/scripts/crude_oil_data_collector.sh >> /home/user/Bureau/projet_linux/scripts/crude_oil_data_logs.log 2>&1
+
+Forex extraction cron command:
+
+0 * * * * /home/user/Bureau/projet_linux/scripts/forex_data_collector.sh >> /home/user/Bureau/projet_linux/scripts/forex_data_logs.log 2>&1
+
+Crude Oil summary cron command:
+
+0 0 * * * /usr/bin/python3 /home/user/Bureau/projet_linux/scripts/crude_oil_data_summarize.py >> /home/user/Bureau/projet_linux/scripts/crude_oil_data_summarize_logs.log 2>&1
+
+Forex summary cron command:
+
+5 * * * * /usr/bin/python3 /home/user/Bureau/projet_linux/scripts/forex_data_summarize.py >> /home/user/Bureau/projet_linux/scripts/forex_data_summarize_logs.log 2>&1
+
+Server app analysis cron command : 
+
+0 0 * * * /usr/bin/python3 /home/user/ShinyDashboard/dashboard/scripts/app.py >> /home/user/dashboard/logs/analyze_data.log 2>&1

@@ -9,3 +9,5 @@ PyJWT==2.7.0
 pyparsing==3.1.1
 pyrsistent==0.20.0
 pyserial==3.5
+numpy==2.2.1
+pandas==2.2.3

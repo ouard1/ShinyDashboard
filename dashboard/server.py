@@ -4,49 +4,67 @@ import plotly.express as px
 from datetime import datetime
 from pymongo import MongoClient
 import plotly.graph_objects as go
-
-client = MongoClient("mongodb://localhost:27017/")
-db = client["testLinuxDataBase"]
-collection = db["testLinuxCollection"]
-
 import pandas as pd
 
-def load_and_process_data(collection):
+client = MongoClient("mongodb://localhost:27017/")
+db = client["dashboard_app_db"]
+collection_crude_oil = db["crude_oil_prices"]
+collection_forex = db["forex_rates"]
+
+
+def load_crude_oil_data(collection):
     data = list(collection.find())
     df = pd.DataFrame(data)
-    
-    df["date"] = pd.to_datetime(df["date"])
+    return df
+
+def preprocess_dataframe(df):
+    df["date"] = pd.to_datetime(df["date"], errors='coerce')
     df["year"] = df["date"].dt.year
     df["month"] = df["date"].dt.month
-    
     df['value'] = pd.to_numeric(df['value'], errors='coerce')
-    
+    return df
+
+def create_missing_dates(df):
     full_date_range = pd.date_range(start=df["date"].min(), end=pd.to_datetime('today'), freq='D')
     missing_dates = full_date_range.difference(df["date"])
 
     missing_df = pd.DataFrame(missing_dates, columns=["date"])
     missing_df['value'] = None  
-
     missing_df["year"] = missing_df["date"].dt.year
     missing_df["month"] = missing_df["date"].dt.month
 
-    df = pd.concat([df, missing_df], ignore_index=True)
-    
-    df = df.sort_values(by="date")
+    return missing_df
 
-    # Réassigner les `_id` en ordre séquentiel
-    df["_id"] = range(1, len(df) + 1)
-    
+def combine_and_sort_data(df, missing_df):
+    combined_df = pd.concat([df, missing_df], ignore_index=True)
+    combined_df = combined_df.sort_values(by="date")
+    combined_df["_id"] = range(1, len(combined_df) + 1)
+    return combined_df
+
+def interpolate_missing_values(df):
     df['value'] = df['value'].interpolate()
-    
     return df
 
-df = load_and_process_data(collection)
-print(df)
+def load_and_process_crude_oil_data(collection):
+    df = load_crude_oil_data(collection)
+    df = preprocess_dataframe(df)
+    missing_df = create_missing_dates(df)
+    df = combine_and_sort_data(df, missing_df)
+    df = interpolate_missing_values(df)
+    return df
+
+def load_forex_data(collection):
+    data = list(collection.find())
+    df = pd.DataFrame(data)
+    return df
+    
+
+df_crude_oil = load_and_process_crude_oil_data(collection_crude_oil)
+df_forex = load_forex_data(collection_forex)
 
 
 def server(input, output, session):
-    unique_years = sorted(df["year"].unique())
+    unique_years = sorted(df_crude_oil["year"].unique())
     unique_months = range(1, 13)
 
     @output
@@ -80,13 +98,11 @@ def server(input, output, session):
     @output
     @render.ui
     def price_plot():
-        global df
-        df = df.copy()
+        global df_crude_oil
+        df = df_crude_oil.copy()
 
         year = input.selected_year() if input.selected_year() else "All years"
-        print(f"year : {year}")
         month = input.selected_month() if input.selected_month() else "All months"
-        print(f"month : {month}")
         filtered_df = df.copy()
 
         if year != "All years":
@@ -143,19 +159,22 @@ def server(input, output, session):
     @output
     @render.ui
     def card_forex():
-        df = pd.read_csv("exchange_rates.csv")
-        currency_data = df[['Currency', 'Exchange Rate', 'Last Refreshed']].to_dict(orient='records')
+        global df_forex
+        currency_data = df_forex[['device', 'exchange_rate', 'last_refreshed']].to_dict(orient='records')
         card_content = ""
         card_content = "".join([
             f"""
             <div style="margin-bottom: 10px; text-align: center; font-size: 18px;">
-                <strong>{item['Currency']}:</strong> {item['Exchange Rate']} <br>
+                <strong>{item['device']}:</strong> {item['exchange_rate']} <br>
             </div>
             """
             for item in currency_data
         ])
-        original_date = currency_data[0]['Last Refreshed'] if currency_data else "N/A"
-        formatted_date = datetime.strptime(original_date, "%Y-%m-%d %H:%M:%S").strftime("%d-%m-%Y %H:%M")
+        original_date = currency_data[0]['last_refreshed'] if currency_data else "N/A"
+        formatted_date = (
+            datetime.strptime(original_date, "%Y-%m-%d %H:%M:%S").strftime("%d-%m-%Y %H:%M")
+            if original_date != "N/A" else "N/A"
+        )
         card_content += f"""
         <div style="margin-top: 20px; text-align: center; font-size: 18px;">
              <strong>Last Refreshed: </strong> {formatted_date}
@@ -163,24 +182,4 @@ def server(input, output, session):
         """
         return ui.div(
             ui.HTML(card_content), 
-        )
-
-
-# Créer le graphe avec Plotly
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=filtered_df["date"],
-            y=filtered_df["value"],
-            mode='markers', 
-            marker=dict(color="#c65c84", size=2), 
-            name="Crude Oil Price"
-        ))
-        fig.update_layout(
-            title="Crude Oil Price Evolution",
-            xaxis_title="Date",
-            yaxis_title="Price (USD)",
-            yaxis=dict(
-                autorange=True,  
-            ),
-            template="plotly_white"
         )

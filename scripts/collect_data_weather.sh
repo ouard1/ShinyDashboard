@@ -20,7 +20,7 @@ longitude_start=-125
 longitude_end=-66
 
 # Interval for the grid points
-interval=1
+interval=5
 
 
 log_file="$project_dir/logs/weather_data_download_$timestamp.log"
@@ -30,7 +30,7 @@ download_weather_data() {
     local lat=$1
     local lon=$2
     local output_file="$directory/weather_data_${lat}_${lon}_$timestamp.json"
-    local url="https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&hourly=temperature_2m,wind_speed_10m,cloudcover&forecast_days=1"
+    local url="https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&hourly=temperature_2m,wind_speed_10m,cloudcover&forecast_days=1&past_days=61"
 
     
     curl -s --retry 3 --retry-delay 2 "$url" -o "$output_file"

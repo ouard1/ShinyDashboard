@@ -1,39 +1,94 @@
 from shiny import ui
 
-app_ui = ui.page_sidebar(
-    ui.sidebar(
-        title="Crude Oil Dashboard",
-        fillable=False,
-        bg="#851c44"  
+
+app_ui = ui.page_fluid(
+   
+    ui.div(
+        ui.h3("Crude Oil Dashboard", style="text-align: left ; color: #fff; margin: 0;"),
+        style="background-color: #6a1636; padding: 20px; font-size: 22px;"
+    ),
+    
+    
+    ui.div(
+        ui.div(
+            ui.card(
+                ui.card_header("JPY", style="text-align: center; font-weight: bold; background-color: #6a1636; color: white;"),
+                ui.output_ui("JPY_rate"),
+                style="flex: 1; margin: 10px; min-width: 150px;"
+            ),
+            ui.card(
+                ui.card_header("EUR", style="text-align: center; font-weight: bold; background-color: #6a1636; color: white;"),
+                ui.output_ui("EUR_rate"),
+                style="flex: 1; margin: 10px; min-width: 150px;"
+            ),
+            ui.card(
+                ui.card_header("CNY", style="text-align: center; font-weight: bold; background-color: #6a1636; color: white;"),
+                ui.output_ui("CNY_rate"),
+                style="flex: 1; margin: 10px; min-width: 150px;"
+            ),
+            ui.card(
+                ui.card_header("CAD", style="text-align: center; font-weight: bold; background-color: #6a1636; color: white;"),
+                ui.output_ui("CAD_rate"),
+                style="flex: 1; margin: 10px; min-width: 150px;"
+            ),
+            ui.card(
+                ui.card_header("MXN", style="text-align: center; font-weight: bold; background-color: #6a1636; color: white;"),
+                ui.output_ui("MXN_rate"),
+                style="flex: 1; margin: 10px; min-width: 150px;"
+            ),
+            style="display: flex; flex-wrap: wrap; justify-content: space-around; margin-bottom: 20px;"
+        )
     ),
 
+
+    ui.div(
     ui.div(
         ui.div(
             ui.div(
                 ui.output_ui("year_selected"),
-                style="margin-right: 10px; flex: 1; max-width: 200px;" 
+                style="margin-right: 10px;"
             ),
             ui.div(
                 ui.output_ui("month_selected"),
-                style="flex: 1; max-width: 200px;" 
+                style="margin-right: 10px;"
             ),
-            style="display: flex; flex-direction: row; align-items: center; gap: 10px; margin-bottom: 10px; margin-top: -20px; margin-left: -10px;"  
+            style="display: flex; flex-direction: row; justify-content: flex-start; gap: 20px; padding: 10px;"
         ),
         ui.div(
             ui.output_ui("price_plot"),
-            style="margin-top: 60px; margin-left: -20px; width: 600px; height: 200px; position: absolute; top: 10px; left: 10px;" 
+            style="flex: 1; display: flex; flex-direction: column; align-items: flex-start; padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);margin-bottom: 20px;"
         ),
+    ),
+    
+),
+
+    ui.div(
+        
         ui.div(
-            ui.card(
-                ui.card_header("Live Currency Exchange Rates for 1 USD", style="text-align: center; font-size: 18px;"),
-                ui.output_ui("card_forex"),
-                style="position: fixed; right: 30px; top: 20px; width: 350px; height: 350px; padding: 10px; border-radius: 10px; border: 4px solid #851c44;"
+            ui.div(
+            ui.div(
+                ui.output_ui("region_selector"),
+                style="margin-right: 10px; "
             ),
+            ui.div(
+                ui.output_ui("variable_selector"),
+                style="margin-right 10px; "
+            ),
+            style="display: flex; flex-direction: row; justify-content: flex-start; gap: 20px; padding: 10px;"
+            ),
+            ui.div(
+                ui.output_ui("correlation_plot"),
+                style="padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);"
+            ),
+            style="display: flex; flex-direction: column; align-items: flex-start; padding: 20px; flex-wrap: wrap;"
         ),
-        style="position: relative; width: 100%; height: auto;", 
-    )
+        
+        ui.div(
+                ui.output_ui("correlation_heatmap"),
+                style="flex: 1; padding: 20px; padding-top : 60px ; padding-bottom :20 px; background-color: #ffffff; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); "
+            ),
+            style="display: flex; justify-content: space-between; gap: 20px; padding : 20px ;"
+    ),
+
+    style="padding: 20px; max-width: 1900px; margin: 0 auto;"  
 )
-
-
-
-

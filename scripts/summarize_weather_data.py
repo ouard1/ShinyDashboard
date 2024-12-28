@@ -2,6 +2,7 @@ import pandas as pd
 import glob
 import os
 import json
+import re
 from pymongo import MongoClient
 from datetime import datetime
 
@@ -25,41 +26,63 @@ def get_region(lat, lon):
     else:
         return "Other"
 
-
 input_dir = "../data/raw/weather/"
+
 
 files = glob.glob(os.path.join(input_dir, "*.json"))
 all_data = []
 
+
 for file in files:
-    with open(file, "r") as f:
-        try:
+    try:
+       
+        match = re.search(r"weather_data_(\-?\d+)_\-(\d+)_", file)
+        lat, lon = None, None
+        if match:
+            lat, lon = float(match.group(1)), -float(match.group(2))  
+
+
+        with open(file, "r") as f:
             data = json.load(f)
+            
+            
+            if not lat or not lon:
+                lat, lon = data.get("latitude"), data.get("longitude")
+            
+            
             if "hourly" in data:
                 hourly_data = data["hourly"]
+                
                 for i, time in enumerate(hourly_data["time"]):
+                    temperature = hourly_data.get("temperature_2m", [None])[i]
+                    wind_speed = hourly_data.get("wind_speed_10m", [None])[i]
                     
-                    if "temperature_2m" in hourly_data and "wind_speed_10m" in hourly_data:
+                    
+                    if temperature is not None and wind_speed is not None:
                         all_data.append({
                             "timestamp": time,
-                            "latitude": data["latitude"],
-                            "longitude": data["longitude"],
-                            "temperature": hourly_data["temperature_2m"][i],
-                            "wind_speed": hourly_data["wind_speed_10m"][i],
+                            "latitude": lat,
+                            "longitude": lon,
+                            "temperature": temperature,
+                            "wind_speed": wind_speed,
                         })
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON in file {file}: {e}")
-        except KeyError as e:
-            print(f"Missing key in file {file}: {e}")
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON in file {file}: {e}")
+    except KeyError as e:
+        print(f"Missing key in file {file}: {e}")
+    except Exception as e:
+        print(f"Unexpected error processing file {file}: {e}")
+
 
 df = pd.DataFrame(all_data)
 
 if not df.empty:
+    
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     df["day"] = pd.to_datetime(df["timestamp"].dt.date)
     df["region"] = df.apply(lambda row: get_region(row["latitude"], row["longitude"]), axis=1)
 
-    
+ 
     daily_summary = df.groupby(["region", "day"]).agg({
         "temperature": "mean",
         "wind_speed": "max"
@@ -67,7 +90,7 @@ if not df.empty:
 
     daily_summary["summary_date"] = datetime.now().isoformat()
 
-  
+    
     client = MongoClient(MONGO_URI)
     db = client[DB_NAME]
     collection = db[COLLECTION_NAME]
@@ -76,6 +99,13 @@ if not df.empty:
     collection.insert_many(documents)
     print(f"Inserted {len(documents)} daily summaries into MongoDB collection '{COLLECTION_NAME}' in database '{DB_NAME}'.")
 
+    
+    for file in files:
+        try:
+            os.remove(file)
+            print(f"Deleted file: {file}")
+        except OSError as e:
+            print(f"Error deleting file {file}: {e}")
     client.close()
 else:
     print("No valid data to process.")

@@ -4,7 +4,7 @@
 
 API_KEY="IAXISE01Z7646DIA"
 BASE_URL="https://www.alphavantage.co/query"
-DEVICES=("JPY" "EUR" "CNY" "CAD" "MXN")
+DEVICES=("SAR" "EUR" "CNY" "CAD" "NGN")
 
 
 

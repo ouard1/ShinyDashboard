@@ -2,7 +2,7 @@
 
 
 
-API_URL="https://www.alphavantage.co/query?function=BRENT&interval=daily&apikey=IAXISE01Z7646DIA"
+API_URL=API_URL="https://www.alphavantage.co/query?function=WTI&interval=daily&apikey=IAXISE01Z7646DIA"
 
 
 

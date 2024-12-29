@@ -19,41 +19,6 @@ def load_crude_oil_data(collection):
     df = pd.DataFrame(data)
     return df
 
-def preprocess_dataframe(df):
-    df["date"] = pd.to_datetime(df["date"], errors='coerce')
-    df["year"] = df["date"].dt.year
-    df["month"] = df["date"].dt.month
-    df['value'] = pd.to_numeric(df['value'], errors='coerce')
-    return df
-
-def create_missing_dates(df):
-    full_date_range = pd.date_range(start=df["date"].min(), end=pd.to_datetime('today'), freq='D')
-    missing_dates = full_date_range.difference(df["date"])
-
-    missing_df = pd.DataFrame(missing_dates, columns=["date"])
-    missing_df['value'] = None  
-    missing_df["year"] = missing_df["date"].dt.year
-    missing_df["month"] = missing_df["date"].dt.month
-
-    return missing_df
-
-def combine_and_sort_data(df, missing_df):
-    combined_df = pd.concat([df, missing_df], ignore_index=True)
-    combined_df = combined_df.sort_values(by="date")
-    combined_df["_id"] = range(1, len(combined_df) + 1)
-    return combined_df
-
-def interpolate_missing_values(df):
-    df['value'] = df['value'].interpolate()
-    return df
-
-def load_and_process_crude_oil_data(collection):
-    df = load_crude_oil_data(collection)
-    df = preprocess_dataframe(df)
-    missing_df = create_missing_dates(df)
-    df = combine_and_sort_data(df, missing_df)
-    df = interpolate_missing_values(df)
-    return df
 
 def load_forex_data(collection):
     data = list(collection.find())
@@ -82,7 +47,7 @@ def load_weather_data(collection):
     df["wind_speed"] = pd.to_numeric(df["wind_speed"], errors="coerce")
     return df   
 
-df_crude_oil = load_and_process_crude_oil_data(collection_crude_oil)
+df_crude_oil = load_crude_oil_data(collection_crude_oil)
 df_forex = load_forex_data(collection_forex)
 df_weather = load_weather_data(collection_weather)
 df_combined = pd.merge(df_crude_oil, df_weather, on="date", how="inner")

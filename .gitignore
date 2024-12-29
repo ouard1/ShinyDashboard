@@ -15,7 +15,7 @@ data/raw/
 
 
 
-cronjobs/
+crontab.txt
 
 
 dashboard/.cache/

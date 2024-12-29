@@ -98,9 +98,13 @@ real-time-dashboard-crude-oil
 │       ├── crude_oil_data/
 ├── logs/                # Directory for logs
 ├── scripts/             # Scripts for data collection and analysis
-│   ├── collect_data.sh  # Script to collect data from APIs
-│   ├── summarize.py     # Script to process data
-│   └── analyze.py       # Script for data analysis and correlation calculations
+│   ├── weather_data_collector.sh
+│   ├── crude_oil_data_collector.sh 
+│   ├── forex_data_collector.sh    
+│   ├── weather_data_summarize.py
+│   ├── forex_data_summarize.py
+│   ├── crude_oil_data_summarize.py       
+│        
 ├── dashboard/           # Shiny app files
 │   ├── app.py           # Shiny app server logic and UI
 │   ├── server.py        # Shiny app server logic

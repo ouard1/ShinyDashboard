@@ -4,7 +4,7 @@
 \usepackage{amsmath}
 
 \title{Real-Time Dashboard for Crude Oil Analysis}
-\contibutors{Ouarda Boumansour & Melissa Merabet}
+\author{Ouarda Boumansour \& Melissa Merabet}
 \date{\today}
 
 \begin{document}
@@ -25,11 +25,9 @@ The data is fetched from multiple APIs and stored in MongoDB collections. The da
 
 \section{Data Sources}
 \begin{itemize}
-    
     \item \textbf{API Open-Meteo}: Supplies real-time weather data, including temperature and wind speed, used to analyze the impact of extreme weather on energy demand.
     \item \textbf{API Alpha Vantage (Forex Rates)}: Offers real-time forex rates for various currencies (USD, CAD, NOK, RUB, SAR).
     \item \textbf{API Alpha Vantage (Crude Oil Data)}: Supplies daily crude oil price data.
-   
 \end{itemize}
 
 \section{Features}
@@ -57,7 +55,7 @@ The data is fetched from multiple APIs and stored in MongoDB collections. The da
 Clone the project repository:
 \begin{verbatim}
 git clone https://github.com/ouard1/ShinyDashboard.git
-cd  ShinyDashboard
+cd ShinyDashboard
 \end{verbatim}
 
 \subsection{Install Python Dependencies}
@@ -96,12 +94,12 @@ real-time-dashboard-crude-oil
 │   └── analyze.py        # Script for data analysis and correlation calculations
 ├── dashboard/            # Shiny app files
 │   └── app.py            # Shiny app server logic and UI
-│   └── server.py            # Shiny app server logic 
-│   └── ui.py            # Shiny app  UI
+│   └── server.py         # Shiny app server logic 
+│   └── ui.py             # Shiny app UI
 ├── report/               # Documentation and project report
 │   └── report.md         # Project report file
-├── cronjobs/            # Cron job configurations for automating data updates
-│   └── crontab.txt  # Cron job file for updating data from APIs
+├── cronjobs/             # Cron job configurations for automating data updates
+│   └── crontab.txt       # Cron job file for updating data from APIs
 └── requirements.txt      # Python dependencies for the project
 \end{verbatim}
 
@@ -112,6 +110,5 @@ real-time-dashboard-crude-oil
     \item \textbf{Weather Variables}: Select either temperature or wind speed to see how they correlate with crude oil prices.
     \item \textbf{Forex Exchange Rate}: View the most recent exchange rates for different currencies and their impact on crude oil prices.
 \end{itemize}
-
 
 \end{document}

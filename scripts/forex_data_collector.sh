@@ -1,6 +1,24 @@
 #!/bin/bash
 
-#Répertoire pour stocker les fichiers 
+
+################################################################################
+# Script: download_forex_data.sh
+# Description: Downloads forex data for specified currencies (USD to SAR, EUR, etc.) 
+#              from the Alpha Vantage API and saves the response in a JSON file.
+#
+# Usage:
+# 1. Place script and .env file in the project directory.
+# 2. Run the script: ./download_forex_data.sh
+#
+# Requirements:
+# - .env file containing API_KEY.
+# - curl and sed installed.
+#
+# Output:
+# - Saves forex data as a JSON file in data/raw/forex_data/ with a timestamp.
+################################################################################
+
+export $(grep -v '^#' .env | xargs)
 
 API_KEY="IAXISE01Z7646DIA"
 BASE_URL="https://www.alphavantage.co/query"

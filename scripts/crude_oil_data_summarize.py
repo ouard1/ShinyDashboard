@@ -1,15 +1,27 @@
 import os 
 import json
 from pymongo import MongoClient 
+from dotenv import load_dotenv
+import pandas as pd
 
-# Répertoire où sont stockés les fichiers json
-DATA_DIR="../data/raw/crude_oil"
+script_dir = os.path.dirname(os.path.realpath(__file__))
+DATA_DIR = os.path.join(script_dir, "../data/raw/crude_oil")
 
-mongo_uri = "mongodb://localhost:27017"
+# Load environment variables from the .env file
+load_dotenv()
+
+mongo_uri = os.getenv("MONGO_URI")
+db_name =  os.getenv("DB_NAME")
+collection_name = os.getenv("CRUDE_COLLECTION_NAME")
+
+if not mongo_uri or not db_name or not collection_name:
+    raise ValueError("Une ou plusieurs variables d'environnement sont manquantes.")
+
+
+
 client = MongoClient(mongo_uri)
-
-crude_oil_db = client["dashboard_app_db"]
-crude_oil_collection = crude_oil_db["crude_oil_prices"]
+crude_oil_db = client[db_name]
+crude_oil_collection = crude_oil_db[collection_name]
 
 def data_exists(date, value):
     """Vérifie si les données existent déjà dans la base MongoDB en fonction de la date et de la valeur."""
@@ -70,19 +82,30 @@ def load_and_process_crude_oil_data():
         if file_name.endswith(".json"):
             file_path = os.path.join(DATA_DIR, file_name)
             df = process_file(file_path)
-            new_records = []
-            for _, row in df.iterrows():
-                date = row["date"]
-                value = row["value"]
-                if not data_exists(date, value):  
-                    new_records.append(row.to_dict())
-            if new_records:
-                crude_oil_collection.insert_many(new_records)
-                print(f"Inséré {len(new_records)} nouvelles données depuis {file_path}")
-            else:
-                print(f"Aucune nouvelle donnée à insérer depuis {file_path}")
-            os.remove(file_path)
-            print(f"Fichier supprimé : {file_name}")
+            
+            if df is not None:
+                new_records = []
+                for _, row in df.iterrows():
+                    date = row["date"]
+                    value = row["value"]
+                    if not data_exists(date, value):  
+                        new_records.append(row.to_dict())
+
+                if new_records:
+                    try:
+                        crude_oil_collection.insert_many(new_records)
+                        print(f"Inséré {len(new_records)} nouvelles données depuis {file_path}")
+                    except Exception as e:
+                        print(f"Erreur lors de l'insertion dans MongoDB : {e}")
+                else:
+                    print(f"Aucune nouvelle donnée à insérer depuis {file_path}")
+                
+            
+                try:
+                    os.remove(file_path)
+                    print(f"Fichier supprimé : {file_name}")
+                except Exception as e:
+                    print(f"Erreur lors de la suppression du fichier {file_name}: {e}")
 
 
 load_and_process_crude_oil_data()

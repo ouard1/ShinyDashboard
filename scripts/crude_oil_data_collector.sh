@@ -1,9 +1,16 @@
 #!/bin/bash
 
+#----------------------------------------------------------------------------------------------------
+# Script to download daily crude oil data (WTI) from the Alpha Vantage API
+# and save it to a timestamped JSON file in the `data/raw/crude_oil` directory.
+# The API key is stored in a .env file for security.
 
+# Requirements: curl, .env file with API_KEY and API_URL
 
-API_URL=API_URL="https://www.alphavantage.co/query?function=WTI&interval=daily&apikey=IAXISE01Z7646DIA"
-
+# Usage:
+# 1. Set the API_KEY and API_URL in a .env file.
+# 2. Run the script to fetch and store the data.
+#-----------------------------------------------------------------------------------------------------
 
 
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
@@ -11,6 +18,11 @@ TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 script_dir=$(dirname "$(realpath "$0")")
 project_dir=$(realpath "$script_dir/..")
 directory="$project_dir/data/raw/crude_oil"
+
+export $(grep -v '^#' "$script_dir/.env" | xargs)
+
+
+API_URL="${API_URL}&apikey=${API_KEY}"
 
 
 mkdir -p "$directory"

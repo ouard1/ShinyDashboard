@@ -7,52 +7,104 @@ import plotly.graph_objects as go
 import pandas as pd
 import seaborn as sns
 import numpy as np
+from dotenv import load_dotenv
+import os
+import sys
 
-client = MongoClient("mongodb://localhost:27017/")
-db = client["dashboard_app_db"]
-collection_crude_oil = db["crude_oil_prices"]
-collection_forex = db["forex_rates"]
-collection_weather = db["weather"]
+# Load environment variables from the scripts/.env file
+dotenv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'scripts', '.env')
+load_dotenv(dotenv_path)
+
+mongo_uri = os.getenv("MONGO_URI")
+db_name =  os.getenv("DB_NAME")
+crude_oil = os.getenv("CRUDE_COLLECTION_NAME")
+weather = os.getenv("WEATHER_COLLECTION_NAME")
+forex = os.getenv("FOREX_COLLECTION_NAME")
+
+client = MongoClient(mongo_uri)
+db = client[db_name]
+
+collection_crude_oil = db[crude_oil ]
+collection_forex = db[forex]
+collection_weather = db[weather]
 
 def load_crude_oil_data(collection):
+    """
+    Load crude oil price data from the specified MongoDB collection.
+    - Converts the 'date' column to datetime and extracts the 'year' and 'month' columns.
+    - Returns a DataFrame containing the crude oil price data.
+    """
     data = list(collection.find())
     df = pd.DataFrame(data)
+    
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    df["year"] = df["date"].dt.year  
+    df["month"] = df["date"].dt.month
+    return df
+
+def load_recent_forex_data(collection):
+    """
+    Load the most recent Forex data for the given devices.
+    """
+    recent_data = []
+    devices = ["SAR", "EUR", "CNY", "CAD", "NGN"]
+    for device in devices:
+        data = collection.find({"device": device}).sort("last_refreshed", -1).limit(1)
+        recent_data.extend(list(data))
+
+    if not recent_data:
+        raise ValueError("No recent Forex data found for the specified devices.")
+
+    df = pd.DataFrame(recent_data)
+    df['last_refreshed'] = pd.to_datetime(df['last_refreshed'])
     return df
 
 
-def load_forex_data(collection):
+def load_full_forex_data(collection):
+    """
+    Load the full Forex data for correlation analysis.
+    """
     data = list(collection.find())
+    if not data:
+        raise ValueError("No Forex data found in the collection.")
+
     df = pd.DataFrame(data)
+    df['last_refreshed'] = pd.to_datetime(df['last_refreshed'])
     return df
+
+    
+    
 
 def load_weather_data(collection):
+    """
+    Load weather data from the specified MongoDB collection.
+    - Converts 'day' column to datetime, 'temperature' and 'wind_speed' columns to numeric.
+    - Raises an exception if the 'day' column is missing or the collection is empty.
+    """
     data = list(collection.find())
-   
-   
     if not data:
         raise ValueError("La collection MongoDB 'weather' est vide ou n'a pas de données.")
-
-  
     df = pd.DataFrame(data)
-   
-    print("Colonnes dans le DataFrame extrait :", df.columns)
-
     
     if "day" not in df.columns:
         raise KeyError("La colonne 'day' est absente. Vérifiez les données MongoDB ou leur extraction.")
-
-
     df["date"] = pd.to_datetime(df["day"], errors="coerce")
     df["temperature"] = pd.to_numeric(df["temperature"], errors="coerce")
     df["wind_speed"] = pd.to_numeric(df["wind_speed"], errors="coerce")
-    return df   
+    return df
 
 df_crude_oil = load_crude_oil_data(collection_crude_oil)
-df_forex = load_forex_data(collection_forex)
+df_recent_forex = load_recent_forex_data(collection_forex)
+df_forex = load_full_forex_data(collection_forex)
 df_weather = load_weather_data(collection_weather)
 df_combined = pd.merge(df_crude_oil, df_weather, on="date", how="inner")
 
 def server(input, output, session):
+    """
+    Define the server logic for the Shiny app.
+    - Includes rendering UI elements such as dropdowns for selecting year, month, region, and weather variable.
+    - Generates plots such as line plots, box plots, scatter plots, and correlation heatmaps.
+    """
     unique_years = sorted(df_crude_oil["year"].unique())
     unique_months = range(1, 13)
     unique_regions = sorted(df_combined["region"].unique())
@@ -136,11 +188,11 @@ def server(input, output, session):
         
         #return ui.HTML(fig_line.to_html(full_html=False))
         return ui.HTML(f"""
-            <div style="display: flex; flex-direction: row; gap: 40px;">
-                <div>
+            <div style="display: flex; flex-direction: row; gap: 80px;  background-color: white ;padding: 10px;justify-content: space-between;">
+                <div style= " background-color: #f9f9f9;padding: 20px;border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); ">
                     {ui.HTML(fig_line.to_html(full_html=False))}
                 </div>
-                <div>
+                 <div style= " background-color: #f9f9f9;padding: 20px;border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); ">
                     {ui.HTML(fig_box.to_html(full_html=False))}
                 </div>
             </div>
@@ -150,30 +202,44 @@ def server(input, output, session):
     @output
     @render.ui
     def card_forex():
-        global df_forex
-        currency_data = df_forex[['device', 'exchange_rate', 'last_refreshed']].to_dict(orient='records')
-        card_content = ""
-        card_content = "".join([
-            f"""
-            <div style="margin-bottom: 10px; text-align: center; font-size: 18px;">
-                <strong>{item['device']}:</strong> {item['exchange_rate']} <br>
-            </div>
-            """
-            for item in currency_data
-        ])
-        original_date = currency_data[0]['last_refreshed'] if currency_data else "N/A"
-        formatted_date = (
-            datetime.strptime(original_date, "%Y-%m-%d %H:%M:%S").strftime("%d-%m-%Y %H:%M")
-            if original_date != "N/A" else "N/A"
-        )
-        card_content += f"""
-        <div style="margin-top: 20px; text-align: center; font-size: 18px;">
-             <strong>Last Refreshed: </strong> {formatted_date}
-        </div>
         """
+        Render Forex cards showing the most recent data for each device.
+        """
+        currency_data = df_recent_forex[['device', 'exchange_rate', 'last_refreshed']].to_dict(orient='records')
+
+        if not currency_data:
+            return ui.div(
+                "No Forex data available.",
+                style="text-align: center; font-size: 18px; margin-top: 20px;"
+            )
+
+        cards = []
+        for item in currency_data:
+            formatted_date = item['last_refreshed'].strftime("%d-%m-%Y %H:%M") if item['last_refreshed'] else "N/A"
+            cards.append(
+                ui.card(
+                    ui.card_header(
+                        item['device'],
+                        style="text-align: center; font-weight: bold; background-color: #6a1636; color: white;"
+                    ),
+                    ui.div(
+                        f"Exchange Rate: {item['exchange_rate']}",
+                        style="text-align: center; font-size: 16px; margin: 10px;"
+                    ),
+                    ui.div(
+                        f"Last Updated: {formatted_date}",
+                        style="text-align: center; font-size: 12px; color: gray; margin-top: 5px;"
+                    ),
+                    style="flex: 1; margin: 10px; min-width: 150px;"
+                )
+            )
+
         return ui.div(
-            ui.HTML(card_content), 
+            *cards,
+            style="display: flex; flex-wrap: wrap; justify-content: space-around; margin-bottom: 20px;"
         )
+
+
     @output
     @render.ui
     def region_selector():
@@ -261,12 +327,12 @@ def server(input, output, session):
         
         correlation_matrix = calculate_forex_crude_correlation(df_crude_oil, df_forex)
         custom_colorscale = [
-            [0, 'rgb(128, 0, 32)'],  # Dark Burgundy
-            [0.25, 'rgb(200, 0, 50)'],  # Lighter Burgundy
-            [0.5, 'rgb(255, 100, 100)'],  # Lighter Red
-            [0.75, 'rgb(255, 200, 200)'],  # Very Light Red
-            [1, 'rgb(255, 255, 255)']  # White (for max value)
-        ]
+        [0, '#2e081b'],      
+        [0.25, '#4d1028'],  
+        [0.5, '#6a1636'],    
+        [0.75, '#a34274'],  
+        [1, '#e1b3c3']      
+         ]
         fig_heatmap = go.Figure(data=go.Heatmap(
             z=correlation_matrix.values,
             x=correlation_matrix.columns,

@@ -188,8 +188,8 @@ def server(input, output, session):
         
         #return ui.HTML(fig_line.to_html(full_html=False))
         return ui.HTML(f"""
-            <div style="display: flex; flex-direction: row; gap: 80px;  background-color: white ;padding: 10px;justify-content: space-between;">
-                <div style= " background-color: #f9f9f9;padding: 20px;border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); ">
+            <div style="display: flex; flex-direction: row; gap: 40px;  background-color: white ;padding: 10px;justify-content: space-between;">
+                <div style= " background-color: #f9f9f9;padding: 20px;border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); width: 1000px">
                     {ui.HTML(fig_line.to_html(full_html=False))}
                 </div>
                  <div style= " background-color: #f9f9f9;padding: 20px;border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); ">

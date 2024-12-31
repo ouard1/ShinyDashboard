@@ -48,7 +48,6 @@ longitude_end=-66
 interval=2
 
 
-log_file="$project_dir/logs/weather_data_download_$timestamp.log"
 
 
 download_weather_data() {
@@ -64,7 +63,7 @@ download_weather_data() {
     if [ -s "$output_file" ]; then
         echo "[$(date)] Data for $lat, $lon successfully saved to $output_file" >> "$log_file"
     else
-        echo "[$(date)] Failed to download data for $lat, $lon" >> "$log_file"
+       
       
         rm -f "$output_file"
     fi
@@ -79,4 +78,4 @@ done
 
 
 find "$directory" -type f -name "*.json" -mtime +7 -exec gzip {} \;
-echo "[$(date)] Old files compressed successfully" >> "$log_file"
+echo "[$(date)] Old files compressed successfully" 

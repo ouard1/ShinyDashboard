@@ -294,37 +294,45 @@ def server(input, output, session):
 
 
     def calculate_forex_crude_correlation(df_crude_oil, df_forex):
-        df_forex_copy = df_forex.rename(columns={'last_refreshed': 'date'})
         
+        df_forex_copy = df_forex.rename(columns={'last_refreshed': 'date'})
         
         df_crude_oil['date'] = pd.to_datetime(df_crude_oil['date']).dt.date
         df_forex_copy['date'] = pd.to_datetime(df_forex_copy['date']).dt.date
 
-        
+       
         df_combined = pd.merge(df_crude_oil, df_forex_copy, on="date", how="inner")
-        
+
+       
         df_combined['value'] = pd.to_numeric(df_combined['value'], errors='coerce')
         df_combined['exchange_rate'] = pd.to_numeric(df_combined['exchange_rate'], errors='coerce')
 
         
-        forex_columns = [col for col in df_combined.columns if col.startswith("exchange_rate")]
-        df_corr = df_combined[["value"] + forex_columns]
+        forex_columns = ['exchange_rate']
+        df_corr = df_combined[['device', 'value'] + forex_columns]
+
+       
+        correlation_results = {}
+        for device in df_corr['device'].unique():
+            df_device = df_corr[df_corr['device'] == device]
+            if not df_device.empty:
+                
+                correlation = df_device[['value', 'exchange_rate']].corr().iloc[0, 1]
+                correlation_results[device] = correlation
+
         
-        
-        df_corr_numeric = df_corr.select_dtypes(include=[float, int])
-        
-        
-        correlation_matrix = df_corr_numeric.corr()
+        correlation_matrix = pd.DataFrame.from_dict(
+            correlation_results, orient='index', columns=['Correlation']
+        )
+        correlation_matrix.index.name = 'Device'
         
         return correlation_matrix
-
-
 
 
     @output
     @render.ui
     def correlation_heatmap():
-        
+      
         correlation_matrix = calculate_forex_crude_correlation(df_crude_oil, df_forex)
         custom_colorscale = [
         [0, '#2e081b'],      
@@ -333,22 +341,24 @@ def server(input, output, session):
         [0.75, '#a34274'],  
         [1, '#e1b3c3']      
          ]
+        
         fig_heatmap = go.Figure(data=go.Heatmap(
-            z=correlation_matrix.values,
-            x=correlation_matrix.columns,
-            y=correlation_matrix.index,
+            z=correlation_matrix['Correlation'].values.reshape(-1, 1), 
+            x=['Correlation'],  
+            y=correlation_matrix.index, 
             colorscale=custom_colorscale,
             zmin=-1, zmax=1,
             colorbar=dict(title="Correlation Coefficient")
         ))
+
         
         fig_heatmap.update_layout(
             title="Correlation Heatmap: Crude Oil Prices vs Forex Exchange Rates",
             xaxis_title="Exchange Rates",
-            yaxis_title="Crude Oil Price (USD)",
+            yaxis_title="Currency",
             template="plotly_white",
             title_font_size=20,
             margin=dict(l=40, r=40, t=60, b=40),
         )
-        
+
         return ui.HTML(fig_heatmap.to_html(full_html=False))

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
-DATA_DIR = os.path.join(script_dir, "../data/raw/crude_oil")
+DATA_DIR = os.path.join(script_dir, "../data/raw/forex_data")
 
 # Load environment variables from the .env file
 load_dotenv()
